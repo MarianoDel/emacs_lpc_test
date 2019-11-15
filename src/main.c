@@ -8,7 +8,7 @@
 
 #include "timer.h"
 #include "lpc2294.h"
-#include "LPC2294_reg.h"
+#include "lpc2294_reg.h"
 
 extern void __disable_interrupts ();
 extern void __enable_interrupts ();

@@ -6,16 +6,13 @@
 
 */
 
-// #include <intrinsics.h>
 #include "lpc2294.h"
-#include "LPC2294_reg.h"
-// #include <iolpc2294.h>
+#include "lpc2294_reg.h"
+
 
 #define BAUDRATE    9600
 #define BAUDRATEDIVISOR (PCLKFREQ/(BAUDRATE*16))
 
-#define VIC_TIMER0_bit (1 << VIC_TIMER0)
-#define VIC_UART0_bit  (1 << VIC_UART0)
 
 // Pointers to interrupt callback functions.
 static void (*timer_function)(void);
@@ -148,10 +145,10 @@ void LPC2294InitTimerInterrupt(void(*timer_func)())
   // Setup timer callback function.
   timer_function = timer_func;
 
-  VICIntSelect &= ~VIC_TIMER0_bit; // IRQ on timer 0 line.
+  VICIntSelect &= ~VIC_TIMER0; // IRQ on timer 0 line.
   VICVectAddr1 = (unsigned int)&TimerInterrupt;
-  VICVectCntl1 = 0x20 | VIC_TIMER0; // Enable vector interrupt for timer 0.
-  VICIntEnable = VIC_TIMER0_bit;    // Enable timer 0 interrupt.
+  VICVectCntl1 = VIC_VEC_TIMER0 | VIC_VEC_ENABLE_MASK;    // Enable vector interrupt for timer 0.
+  VICIntEnable |= VIC_TIMER0;    // Enable timer 0 interrupt.
 }
 
 // Setup UART interrupt
@@ -162,10 +159,10 @@ void LPC2294InitUART0Interrupt(void(*uart0rx_func)(unsigned char),
   uart0rx_function = uart0rx_func;
   uart0tx_function = uart0tx_func;
 
-  VICIntSelect &= ~VIC_UART0_bit;  // IRQ on UART0.
+  VICIntSelect &= ~VIC_UART0;  // IRQ on UART0.
   VICVectAddr5 = (unsigned int)&UART0Interrupt;
-  VICVectCntl5 = 0x20 | VIC_UART0; // Enable vector interrupt for UART0.
-  VICIntEnable = VIC_UART0_bit;    // Enable UART 0 interrupt.
+  VICVectCntl5 = VIC_VEC_UART0 | VIC_VEC_ENABLE_MASK; // Enable vector interrupt for UART0.
+  VICIntEnable |= VIC_UART0;    // Enable UART 0 interrupt.
 }
 
 //

@@ -421,13 +421,49 @@
 #define WDTV			(*((volatile unsigned long *) 0xE000000C))
 
 
-/* Interrupts num */
-#define VIC_SW 1
-#define VIC_TIMER0 4
-#define VIC_TIMER1 5
-#define VIC_TIMER2 26
-#define VIC_TIMER3 27
-#define VIC_UART0 6
+/* Peripherals Interrupts VIC Controller as know in UM10114 5.6 */
+#define VIC_TIMER0 0x00000010
+#define VIC_TIMER1 0x00000020
+#define VIC_UART0  0x00000040
+#define VIC_UART1  0x00000080
+#define VIC_PWM    0x00000100
+#define VIC_I2C    0x00000200
+#define VIC_SPI0   0x00000400
+#define VIC_SPI1   0x00000800
+#define VIC_PLL    0x00001000
+#define VIC_RTC    0x00002000
+#define VIC_EINT0  0x00004000
+#define VIC_EINT1  0x00008000
+#define VIC_EINT2  0x00010000
+#define VIC_EINT3  0x00020000
+#define VIC_ADC    0x00040000
+#define VIC_CANA   0x00080000
+#define VIC_CAN1TX 0x00100000
+#define VIC_CAN2TX 0x00200000
+#define VIC_CAN3TX 0x00400000
+#define VIC_CAN4TX 0x00800000
+
+#define VIC_CANF   0x02000000
+#define VIC_CAN1RX 0x04000000
+#define VIC_CAN2RX 0x08000000
+#define VIC_CAN3RX 0x10000000
+#define VIC_CAN4RX 0x20000000
+
+
+/* Vectored Interrupts Enables as know in UM10114 5.5.9 and table 51 */
+#define VIC_VEC_TIMER0 4
+#define VIC_VEC_TIMER1 5
+#define VIC_VEC_UART0  6
+#define VIC_VEC_UART1  7
+#define VIC_VEC_PWM    8
+#define VIC_VEC_I2C    9
+#define VIC_VEC_SPI0   10
+#define VIC_VEC_SPI1   11
+#define VIC_VEC_PLL    12
+#define VIC_VEC_RTC    13
+
+#define VIC_VEC_ENABLE_MASK    0x20
+
 /*********************************************************************************************************
 **  						  End Of File
 ********************************************************************************************************/

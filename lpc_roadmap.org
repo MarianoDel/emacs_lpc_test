@@ -1,0 +1,32 @@
+* ARRANQUE DEL PROCESADOR LPC2292
+** Verificacion del Timer0 con Int
+*** Non-Vectored Int
+    - probar la int sin attribute en dummy interrupt
+    - probar sin enable interrupts para ver si dispara, analizar vicraw en el main
+    - probar el non-vectored con los nuevos defines del VIC
+
+*** Vectored Int
+
+*** TODO Armar funcion Sleep o Wait_ms antes de avanzar
+
+** Usart0 con y sin Int
+*** Non-Vectored Int
+*** Vectored Int
+
+** Verificacion general de Ints
+*** TODO Probar de no marcar con el atributo las funciones de interrupciones
+*** TODO Probar disable / enable interrupts a nivel de core
+    - al final del main.c tengo codigo comentado de una propuesta para LPC2103
+      que es el mismo core
+
+** TODO Verificar vectored ints
+
+** TODO Limpiar archivos que no uso del proyecto
+
+** TODO Cuando todo funcione como es la interaccion con thumb
+
+** TODO Agregar palabra de proteccion a nivel de linker
+*** Verificar seguridad conseguida
+
+** TODO Grabar algun dato en cada segmento de memoria
+*** Verificar integridad posterior
