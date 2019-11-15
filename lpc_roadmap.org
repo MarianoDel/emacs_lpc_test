@@ -26,6 +26,9 @@
 ** TODO Cuando todo funcione como es la interaccion con thumb
 
 ** TODO Agregar palabra de proteccion a nivel de linker
+   - revisar ALDS/Linkerscript:111-113
+   - revisar ALDS/drivers/init.c:38
+
 *** Verificar seguridad conseguida
 
 ** TODO Grabar algun dato en cada segmento de memoria
