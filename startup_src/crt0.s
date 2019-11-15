@@ -74,11 +74,11 @@ Vectors:
         ldr   pc,_pabt                  // program abort - _pabt
         ldr   pc,_dabt                  // data abort - _dabt
         nop                             // reserved
-#if (scmRTOS_CONTEXT_SWITCH_SCHEME == 0) || defined(GCC_IRQ_PATCH_REQUIRED)
-        ldr   pc, _irq         /* IRQ interrupt         */
-#else
+@#if (scmRTOS_CONTEXT_SWITCH_SCHEME == 0) || defined(GCC_IRQ_PATCH_REQUIRED)
+@        ldr   pc, _irq         /* IRQ interrupt         */
+@#else
         ldr   pc,[pc,#-0xFF0]           // IRQ - read the VIC
-#endif
+@#endif
         ldr   pc,_fiq                   // FIQ - _fiq
 
 
@@ -88,7 +88,7 @@ _swi:   .word _reset                    // SWI - _reset
 _pabt:  .word _reset                    // program abort - _reset
 _dabt:  .word _reset                    // data abort - _reset
 
-_irq:   .word IRQHandler
+@_irq:   .word IRQHandler
 _fiq:   .word _reset                    // FIQ - _reset
 
         .size _boot, . - _boot
@@ -187,7 +187,7 @@ __disable_interrupts:
                                               @ to disable. Make sure we do nothing else than
                                               @ that by masking out all other bits (NOTE: a1 == r0)
         orr     r1, r1, r0              @ Now disable requested interrupts by setting the right bits
-        msr     CPSR, r1           @ Place modified status register back
+        msr     CPSR_c, r1           @ Place modified status register back
         bx      lr                      @ And exit function
 
 @@
@@ -199,7 +199,15 @@ __enable_interrupts:
                                               @ to enable. Make sure we do nothing else than
                                               @ that by masking out all other bits (NOTE: a1 == r0)
         bic     r1, r1, r0              @ And enable the requested interrupts by clearing the right bits
-        msr     CPSR_c, r1           @ Place modified status register back
+        msr     CPSR, r1           @ Place modified status register back
         bx      lr                      @ And exit function
 
         .end
+
+
+        @stmfd	sp!, {r0}
+        @mrs	r0, cpsr
+        @bic	r0,r0,#IRQ_DISABLED
+        @msr	cpsr_fsxc, r0
+        @ldmfd	sp!, {r0}
+        @bx	lr

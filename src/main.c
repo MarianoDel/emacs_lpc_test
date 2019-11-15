@@ -31,17 +31,18 @@ int main (void)
     LPC2294InitPIO();
 
     // First disable interrupts.
-    // DisableInterrupts;
+    DisableInterrupts;
 
     // Setup interrupt controller.
-    // LPC2294InitVIC();
+    LPC2294InitVIC();
     // LPC2294InitTimerInterrupt(TimerBeat);
+    LPC2294InitTimerInterruptNonVectored();
 
     // Periodic timer initialization.
     LPC2294InitTimer();
 
     // Enable interrupts.
-    // EnableInterrupts;
+    EnableInterrupts;
 
     LED1_OFF;
     LED3_OFF;
@@ -52,21 +53,40 @@ int main (void)
     
     // Start periodic timer.
     LPC2294StartTimer();
-
+    
     while (1)
     {
-        if (T0IR & 0x01)    //hubo match
-        {
-            T0IR |= 0x01;    //blank int line
-            if (LED1)
-                LED1_OFF;
-            else
-                LED1_ON;
-        }
-        // if (T0TC < (PCLKFREQ >> 1))
-        //     LED1_ON;
-        // else
-        //     LED1_OFF;
+        // if (T0IR & 0x01)    //hubo match
+        // {
+        //     T0IR |= 0x01;    //blank int line
+        //     if (LED1)
+        //         LED1_OFF;
+        //     else
+        //         LED1_ON;
+        // }
+
+        // if (VICRawIntr & 0x10)    //hubo match en el VIC
+        // {
+        //     if (VICIRQStatus & 0x10)
+        //     {
+        //         if (LED7)
+        //             LED7_OFF;
+        //         else
+        //             LED7_ON;
+        //     }
+
+        //     if (LED1)
+        //         LED1_OFF;
+        //     else
+        //         LED1_ON;
+
+        //     T0IR |= 0x01;    //blank int line
+        // }
+
+        if (T0TC < (PCLKFREQ >> 1))
+            LED7_ON;
+        else
+            LED7_OFF;
     }
         
     // Loop forever.
@@ -114,3 +134,33 @@ void SimpleDelay (void)
 }
 
 
+/*
+There is no such instruction, you have to change a bit in a cpsr
+register. You have to be in a privileged state to do so.
+And you have to make sure that the change took place, in case another
+task is enabling interrupts at the 'same' time.
+
+Here's the functions that I use:
+
+disable_interrupts:
+dint:
+critical_Begin:
+mrs	r0, cpsr
+orr	r1, r0, #IRQ_DISABLED // keep r0 to return	
+msr	cpsr_c, r1
+mrs	r2, cpsr
+and	r2, r2, #IRQ_DISABLED
+cmp	r2, #IRQ_DISABLED
+bne	=critical_Begin
+bx	lr
+
+enable_interrupts:
+eint:
+critical_End:
+stmfd	sp!, {r0}
+mrs	r0, cpsr
+bic	r0,r0,#IRQ_DISABLED
+msr	cpsr_fsxc, r0
+ldmfd	sp!, {r0}
+bx	lr
+*/

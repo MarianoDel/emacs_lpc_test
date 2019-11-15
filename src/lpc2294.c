@@ -22,6 +22,8 @@ static void (*timer_function)(void);
 static void (*uart0rx_function)(unsigned char);
 static void (*uart0tx_function)(void);
 
+static void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
+
 //
 // Interrupt handlers.
 //
@@ -29,14 +31,28 @@ static void (*uart0tx_function)(void);
 //Dummy interrupt handler, called as default in irqHandler() if no other
 //vectored interrupt is called.
 static void DefDummyInterrupt(void)
-{}
+{
+    if (LED6)
+        LED6_OFF;
+    else
+        LED6_ON;
+
+    T0IR = 0xff; // Clear timer 0 interrupt line.
+    VICVectAddr = 0;    // Reset VIC logic
+}
 
 // Timer interrupt handler
 static void TimerInterrupt(void)
 {
-  (*timer_function)(); // Call timer callback function.
+    // (*timer_function)(); // Call timer callback function.
 
-  T0IR = 0xff; // Clear timer 0 interrupt line.
+    T0IR = 0xff; // Clear timer 0 interrupt line.
+    if (LED3)
+        LED3_OFF;
+    else
+        LED3_ON;
+
+    VICVectAddr = 0;    // Reset VIC logic
 }
 
 //UART0 interrupt handler
@@ -114,6 +130,16 @@ void LPC2294InitVIC()
   // Disable all interrupts
   VICIntEnClear = 0xffffffff;
   VICDefVectAddr = (unsigned int)&DefDummyInterrupt;
+}
+
+void LPC2294InitTimerInterruptNonVectored (void)
+{
+    // VICIntSelect &= ~VIC_TIMER0_bit; // IRQ on timer 0 line.
+    VICIntSelect &= 0xFFFFFFEF; // IRQ on timer 0 line.
+    // VICIntEnable = VIC_TIMER0_bit;    // Enable timer 0 interrupt.
+    VICIntEnable |= 0x10;    // Enable timer 0 interrupt.    
+    //dummy addr already setted
+    
 }
 
 // Setup Timer interrupt

@@ -41,6 +41,8 @@
 
 
 
+void LPC2294InitTimerInterruptNonVectored (void);
+
 void LPC2294SystemInit(void);
 
 void LPC2294InitVIC(void);
