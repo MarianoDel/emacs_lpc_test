@@ -19,7 +19,8 @@ static void (*timer_function)(void);
 static void (*uart0rx_function)(unsigned char);
 static void (*uart0tx_function)(void);
 
-static void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
+// static void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
+void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
 
 //
 // Interrupt handlers.
@@ -27,7 +28,8 @@ static void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
 
 //Dummy interrupt handler, called as default in irqHandler() if no other
 //vectored interrupt is called.
-static void DefDummyInterrupt(void)
+// static void DefDummyInterrupt(void)
+void DefDummyInterrupt(void)    
 {
     if (LED6)
         LED6_OFF;
@@ -136,7 +138,7 @@ void LPC2294InitTimerInterruptNonVectored (void)
     // VICIntEnable = VIC_TIMER0_bit;    // Enable timer 0 interrupt.
     VICIntEnable |= 0x10;    // Enable timer 0 interrupt.    
     //dummy addr already setted
-    
+    VICVectAddr = 0;    // Reset VIC logic    
 }
 
 // Setup Timer interrupt

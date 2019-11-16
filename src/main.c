@@ -12,6 +12,7 @@
 
 extern void __disable_interrupts ();
 extern void __enable_interrupts ();
+extern void DefDummyInterrupt ();
 
 // Module Functions Declarations -----------------------------------------------
 void SimpleDelay (void);
@@ -73,6 +74,16 @@ int main (void)
         //             LED7_OFF;
         //         else
         //             LED7_ON;
+
+        //         if (VICVectAddr == (unsigned int) &DefDummyInterrupt)
+        //         {
+        //             if (LED6)
+        //                 LED6_OFF;
+        //             else
+        //                 LED6_ON;
+
+        //             VICVectAddr = 0;
+        //         }
         //     }
 
         //     if (LED1)
