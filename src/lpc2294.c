@@ -13,14 +13,18 @@
 #define BAUDRATE    9600
 #define BAUDRATEDIVISOR (PCLKFREQ/(BAUDRATE*16))
 
+// Module Globals --------------------------------------------------------------
+volatile unsigned short wait_ms_counter = 0;
 
+
+// Module Private Functions ----------------------------------------------------
 // Pointers to interrupt callback functions.
-static void (*timer_function)(void);
 static void (*uart0rx_function)(unsigned char);
 static void (*uart0tx_function)(void);
 
-// static void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
-void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
+static void TimerInterruptHandler(void) __attribute__ ((interrupt ("IRQ")));
+static void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
+// void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
 
 //
 // Interrupt handlers.
@@ -28,8 +32,8 @@ void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
 
 //Dummy interrupt handler, called as default in irqHandler() if no other
 //vectored interrupt is called.
-// static void DefDummyInterrupt(void)
-void DefDummyInterrupt(void)    
+static void DefDummyInterrupt(void)
+// void DefDummyInterrupt(void)    
 {
     if (LED6)
         LED6_OFF;
@@ -41,18 +45,27 @@ void DefDummyInterrupt(void)
 }
 
 // Timer interrupt handler
-static void TimerInterrupt(void)
+static void TimerInterruptHandler(void)
 {
-    // (*timer_function)(); // Call timer callback function.
-
     T0IR = 0xff; // Clear timer 0 interrupt line.
-    if (LED3)
-        LED3_OFF;
-    else
-        LED3_ON;
+    // if (LED3)
+    //     LED3_OFF;
+    // else
+    //     LED3_ON;
 
+    if (wait_ms_counter)
+        wait_ms_counter--;
+    
     VICVectAddr = 0;    // Reset VIC logic
 }
+
+
+void Wait_ms (unsigned short tms)
+{
+    wait_ms_counter = tms;
+    while (wait_ms_counter);
+}
+
 
 //UART0 interrupt handler
 static void UART0Interrupt(void)
@@ -98,22 +111,7 @@ static void UART0Interrupt(void)
 //
 void LPC2294SystemInit(void)
 {
-// #ifdef iRAM
-//   MEMMAP = 2;             // Map interrupt vectors to internal ram
-// #else
-// #ifdef iFLASH             // Map interrupt vectors to internal flash
-  MEMMAP = 1;
-// #else
-//   BCFG0 = 0x20003CE3;     // BCFG0: Flash Bus Configuration
-//   BCFG1 = 0x20003CE3;     // BCFG1: Ram Bus Configuration
-//   PINSEL2 = 0x0E6149E4;   // PINSEL2: CS0, CS1, CS2, OE, WE, BLS0..3, D0..31, A2..23, JTAG
-// #ifdef xFLASH
-//   MEMMAP = 3;             // Map interrupt vectors to the first external device (flash in this case)
-// #else
-//   MEMMAP = 2;             // Map interrupt vectors to internal ram for debugging from external ram
-// #endif
-// #endif
-// #endif
+    MEMMAP = 1;
 }
 
 //
@@ -131,26 +129,25 @@ void LPC2294InitVIC()
   VICDefVectAddr = (unsigned int)&DefDummyInterrupt;
 }
 
+
 void LPC2294InitTimerInterruptNonVectored (void)
 {
-    // VICIntSelect &= ~VIC_TIMER0_bit; // IRQ on timer 0 line.
-    VICIntSelect &= 0xFFFFFFEF; // IRQ on timer 0 line.
-    // VICIntEnable = VIC_TIMER0_bit;    // Enable timer 0 interrupt.
-    VICIntEnable |= 0x10;    // Enable timer 0 interrupt.    
+    VICIntSelect &= ~VIC_TIMER0;    // IRQ on timer 0 line.
+    VICIntEnable |= VIC_TIMER0;    // Enable timer 0 interrupt.    
+
     //dummy addr already setted
     VICVectAddr = 0;    // Reset VIC logic    
 }
 
-// Setup Timer interrupt
-void LPC2294InitTimerInterrupt(void(*timer_func)())
-{
-  // Setup timer callback function.
-  timer_function = timer_func;
 
-  VICIntSelect &= ~VIC_TIMER0; // IRQ on timer 0 line.
-  VICVectAddr1 = (unsigned int)&TimerInterrupt;
-  VICVectCntl1 = VIC_VEC_TIMER0 | VIC_VEC_ENABLE_MASK;    // Enable vector interrupt for timer 0.
-  VICIntEnable |= VIC_TIMER0;    // Enable timer 0 interrupt.
+// Setup Timer interrupt
+void LPC2294InitTimerInterrupt(void)
+{
+    VICIntSelect &= ~VIC_TIMER0; // IRQ on timer 0 line.
+    VICVectAddr1 = (unsigned int)&TimerInterruptHandler;
+    VICVectCntl1 = VIC_VEC_TIMER0 | VIC_VEC_ENABLE_MASK;    // Enable vector interrupt for timer 0.
+    VICIntEnable |= VIC_TIMER0;    // Enable timer 0 interrupt.
+    VICVectAddr = 0;    // Reset VIC logic    
 }
 
 // Setup UART interrupt
@@ -179,8 +176,7 @@ void LPC2294InitTimer()
   T0TCR = 0;
   T0IR = 0xff; // Clear timer 0 interrupt line.
   T0PR = 0; // Prescaler is set to no division.
-  T0MR0 = PCLKFREQ; // Count up to this value. To generate 1000KHz.
-  // T0MR0 = PCLKFREQ / 300; // Count up to this value. To generate 1000KHz.  
+  T0MR0 = PCLKFREQ / 1000; // Count up to this value. To generate 1000KHz.
   T0MCR = 3; // Reset and interrupt on MR0 (match register 0).
   T0CCR = 0; // Capture is disabled.
   T0EMR = 0; // No external match output.

@@ -1,13 +1,20 @@
 * ARRANQUE DEL PROCESADOR LPC2292
 ** Verificacion del Timer0 con Int
 *** Non-Vectored Int
-    - probar la int sin attribute en dummy interrupt
-    - probar sin enable interrupts para ver si dispara, analizar vicraw en el main
-    - probar el non-vectored con los nuevos defines del VIC
+    - probar la int sin attribute en DefDummyInterrupt
+      DONE: si no uso el attribute, no vuelve de la int
 
 *** Vectored Int
+    - probar la int sin attribute en TimerInterrupt
+      DONE: si no uso el attribute, no vuelve de la int
+
+    - cargue el mismo codigo en la no vectorizada y siempre salta la vect primero
 
 *** TODO Armar funcion Sleep o Wait_ms antes de avanzar
+
+*** Poner variable global y probar un par de ints, luego deshabilitar
+    - deshabilitar con DisableInterrupts para poder probarlo
+    - habilitar nuevamente
 
 ** Usart0 con y sin Int
 *** Non-Vectored Int
@@ -33,3 +40,8 @@
 
 ** TODO Grabar algun dato en cada segmento de memoria
 *** Verificar integridad posterior
+
+* LO QUE USO PARA GRABAR
+** Flasher command line
+   lpc21isp -bin blinky.bin /dev/ttyACM0 9600 10000
+

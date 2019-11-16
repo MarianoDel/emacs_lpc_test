@@ -36,8 +36,8 @@ int main (void)
 
     // Setup interrupt controller.
     LPC2294InitVIC();
-    // LPC2294InitTimerInterrupt(TimerBeat);
-    LPC2294InitTimerInterruptNonVectored();
+    LPC2294InitTimerInterrupt();
+    // LPC2294InitTimerInterruptNonVectored();
 
     // Periodic timer initialization.
     LPC2294InitTimer();
@@ -57,6 +57,12 @@ int main (void)
     
     while (1)
     {
+        if (LED3)
+            LED3_OFF;
+        else
+            LED3_ON;
+
+        Wait_ms(50);
         // if (T0IR & 0x01)    //hubo match
         // {
         //     T0IR |= 0x01;    //blank int line
@@ -75,6 +81,8 @@ int main (void)
         //         else
         //             LED7_ON;
 
+        //         //para que lo que sigue funcione, necesito quitar static
+        //         //en lpc2294.c declaration & definition
         //         if (VICVectAddr == (unsigned int) &DefDummyInterrupt)
         //         {
         //             if (LED6)
@@ -93,11 +101,11 @@ int main (void)
 
         //     T0IR |= 0x01;    //blank int line
         // }
-
-        if (T0TC < (PCLKFREQ >> 1))
-            LED7_ON;
-        else
-            LED7_OFF;
+        
+        // if (T0TC < (PCLKFREQ >> 1))
+        //     LED7_ON;
+        // else
+        //     LED7_OFF;
     }
         
     // Loop forever.
