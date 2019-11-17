@@ -10,12 +10,16 @@
 #include "lpc2294.h"
 #include "lpc2294_reg.h"
 
+// Module Externals -----------------------------------------------------------
+volatile unsigned short global_timer = 0;
+
 extern void __disable_interrupts ();
 extern void __enable_interrupts ();
 extern void DefDummyInterrupt ();
 
 // Module Functions Declarations -----------------------------------------------
 void SimpleDelay (void);
+void SimpleDelay2 (void);
 void DisableInterrupts (void);
 
 #define DisableInterrupts    __disable_interrupts()
@@ -57,12 +61,13 @@ int main (void)
     
     while (1)
     {
-        if (LED3)
-            LED3_OFF;
-        else
-            LED3_ON;
+        // if (LED3)
+        //     LED3_OFF;
+        // else
+        //     LED3_ON;
 
-        Wait_ms(50);
+        // Wait_ms(50);
+        
         // if (T0IR & 0x01)    //hubo match
         // {
         //     T0IR |= 0x01;    //blank int line
@@ -106,6 +111,66 @@ int main (void)
         //     LED7_ON;
         // else
         //     LED7_OFF;
+
+        // while (1)
+        // {
+        //     //disable int
+        //     VICIntEnClear |= VIC_TIMER0;
+        //     SimpleDelay2();
+        //     VICIntEnable |= VIC_TIMER0;
+        //     SimpleDelay2();
+        // }
+            
+            
+            
+
+        //apagar y prender ints en el core cada 1 segundo
+#define WITH_CORE_INTS    0
+#define ONLY_TIMER    1
+        
+        unsigned char int_state = WITH_CORE_INTS;
+
+        while (1)
+        {
+            switch (int_state)
+            {
+            case WITH_CORE_INTS:
+                if (global_timer > 1000)
+                {
+                    // DisableInterrupts;
+                    VICIntEnClear |= VIC_TIMER0;
+                    LED3_OFF;
+                    int_state = ONLY_TIMER;
+                    global_timer = 0;
+                }
+                break;
+
+            case ONLY_TIMER:
+                if (global_timer < 1000)
+                {
+                    if (T0IR & 0x01)    //hubo match
+                    {
+                        T0IR |= 0x01;    //blank int line
+                        if (LED1)
+                            LED1_OFF;
+                        else
+                            LED1_ON;
+
+                        global_timer++;
+                    }
+                }
+                else
+                {
+                    LED1_OFF;
+                    int_state = WITH_CORE_INTS;
+                    global_timer = 0;
+                    // EnableInterrupts;
+                    VICIntEnable |= VIC_TIMER0;
+                }
+                break;
+            }
+        }
+        
     }
         
     // Loop forever.
@@ -145,6 +210,17 @@ void sysInit (void)
 void SimpleDelay (void)
 {
     for (unsigned char i = 0; i < 255; i++)
+    {
+        asm (	"nop \n\t"
+                "nop \n\t"
+                "nop \n\t" );
+    }
+}
+
+
+void SimpleDelay2 (void)
+{
+    for (unsigned short i = 0; i < 65000; i++)
     {
         asm (	"nop \n\t"
                 "nop \n\t"

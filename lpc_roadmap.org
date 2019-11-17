@@ -10,7 +10,8 @@
 
     - cargue el mismo codigo en la no vectorizada y siempre salta la vect primero
 
-*** TODO Armar funcion Sleep o Wait_ms antes de avanzar
+*** DONE Armar funcion Sleep o Wait_ms antes de avanzar
+    CLOSED: [2019-11-16 Sat 12:30]
 
 *** Poner variable global y probar un par de ints, luego deshabilitar
     - deshabilitar con DisableInterrupts para poder probarlo
@@ -25,6 +26,12 @@
 *** TODO Probar disable / enable interrupts a nivel de core
     - al final del main.c tengo codigo comentado de una propuesta para LPC2103
       que es el mismo core
+
+
+** Para jugar un rato
+*** Verificar que se carguen variables con valores definidos
+*** Verificar strings
+*** Verificar funciones de la lib standar
 
 ** TODO Verificar vectored ints
 

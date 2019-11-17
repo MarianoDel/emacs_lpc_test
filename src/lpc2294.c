@@ -13,6 +13,9 @@
 #define BAUDRATE    9600
 #define BAUDRATEDIVISOR (PCLKFREQ/(BAUDRATE*16))
 
+// Module Externals -----------------------------------------------------------
+extern volatile unsigned short global_timer;
+
 // Module Globals --------------------------------------------------------------
 volatile unsigned short wait_ms_counter = 0;
 
@@ -48,11 +51,13 @@ static void DefDummyInterrupt(void)
 static void TimerInterruptHandler(void)
 {
     T0IR = 0xff; // Clear timer 0 interrupt line.
-    // if (LED3)
-    //     LED3_OFF;
-    // else
-    //     LED3_ON;
+    if (LED3)
+        LED3_OFF;
+    else
+        LED3_ON;
 
+    global_timer++;
+    
     if (wait_ms_counter)
         wait_ms_counter--;
     
@@ -117,7 +122,6 @@ void LPC2294SystemInit(void)
 //
 // Interrupt controller initalization.
 //
-#define VICIntEnClear VICIntEnClr
 
 // Reset all interrupts
 void LPC2294InitVIC()

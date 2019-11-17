@@ -39,7 +39,7 @@
 #define VICRawIntr  	(*((volatile unsigned long *) 0xFFFFF008))
 #define VICIntSelect	(*((volatile unsigned long *) 0xFFFFF00C))
 #define VICIntEnable	(*((volatile unsigned long *) 0xFFFFF010))
-#define VICIntEnClr 	(*((volatile unsigned long *) 0xFFFFF014))
+#define VICIntEnClear 	(*((volatile unsigned long *) 0xFFFFF014))
 #define VICSoftInt  	(*((volatile unsigned long *) 0xFFFFF018))
 #define VICSoftIntClear (*((volatile unsigned long *) 0xFFFFF01C))
 #define VICProtection   (*((volatile unsigned long *) 0xFFFFF020))
