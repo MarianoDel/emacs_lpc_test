@@ -25,7 +25,10 @@ void DisableInterrupts (void);
 #define DisableInterrupts    __disable_interrupts()
 #define EnableInterrupts   __enable_interrupts()
 
-
+const char s1 [] = {"Primero\n"};
+const char s2 [] = {"Segundo\n"};
+const char s3 [] = {"Tercero\n"};
+    
 // Module Functions Definitions ------------------------------------------------
 int main (void)
 {
@@ -58,13 +61,37 @@ int main (void)
     
     // Start periodic timer.
     LPC2294StartTimer();
-    
+
+    //Start the UART0
+    LPC2294InitUART0();
+
+    unsigned char a_enviar = 2;
+    LPC2294UART0TxString("Empiezo con 2\n");
     while (1)
     {
-        // if (LED3)
-        //     LED3_OFF;
-        // else
-        //     LED3_ON;
+        Wait_ms(330);
+        
+        LED3_ON;
+        // LPC2294UART0TxByte('M');
+        // LPC2294UART0TxString("Marianito\n");
+        switch (a_enviar)
+        {
+        case 0:
+            LPC2294UART0TxString((char *)s1);
+            a_enviar++;
+            break;
+
+        case 1:
+            LPC2294UART0TxString((char *)s2);
+            a_enviar++;            
+            break;
+
+        case 2:
+            LPC2294UART0TxString((char *)s3);
+            a_enviar = 0;
+            break;
+        }
+        LED3_OFF;
 
         // Wait_ms(50);
         
@@ -128,48 +155,48 @@ int main (void)
 #define WITH_CORE_INTS    0
 #define ONLY_TIMER    1
         
-        unsigned char int_state = WITH_CORE_INTS;
+        // unsigned char int_state = WITH_CORE_INTS;
 
-        while (1)
-        {
-            switch (int_state)
-            {
-            case WITH_CORE_INTS:
-                if (global_timer > 1000)
-                {
-                    DisableInterrupts;
-                    // VICIntEnClear |= VIC_TIMER0;
-                    LED3_OFF;
-                    int_state = ONLY_TIMER;
-                    global_timer = 0;
-                }
-                break;
+        // while (1)
+        // {
+        //     switch (int_state)
+        //     {
+        //     case WITH_CORE_INTS:
+        //         if (global_timer > 1000)
+        //         {
+        //             DisableInterrupts;
+        //             // VICIntEnClear |= VIC_TIMER0;
+        //             LED3_OFF;
+        //             int_state = ONLY_TIMER;
+        //             global_timer = 0;
+        //         }
+        //         break;
 
-            case ONLY_TIMER:
-                if (global_timer < 1000)
-                {
-                    if (T0IR & 0x01)    //hubo match
-                    {
-                        T0IR |= 0x01;    //blank int line
-                        if (LED1)
-                            LED1_OFF;
-                        else
-                            LED1_ON;
+        //     case ONLY_TIMER:
+        //         if (global_timer < 1000)
+        //         {
+        //             if (T0IR & 0x01)    //hubo match
+        //             {
+        //                 T0IR |= 0x01;    //blank int line
+        //                 if (LED1)
+        //                     LED1_OFF;
+        //                 else
+        //                     LED1_ON;
 
-                        global_timer++;
-                    }
-                }
-                else
-                {
-                    LED1_OFF;
-                    int_state = WITH_CORE_INTS;
-                    global_timer = 0;
-                    EnableInterrupts;
-                    // VICIntEnable |= VIC_TIMER0;
-                }
-                break;
-            }
-        }
+        //                 global_timer++;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             LED1_OFF;
+        //             int_state = WITH_CORE_INTS;
+        //             global_timer = 0;
+        //             EnableInterrupts;
+        //             // VICIntEnable |= VIC_TIMER0;
+        //         }
+        //         break;
+        //     }
+        // }
         
     }
         

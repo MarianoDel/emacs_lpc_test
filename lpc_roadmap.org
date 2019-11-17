@@ -13,17 +13,28 @@
 *** DONE Armar funcion Sleep o Wait_ms antes de avanzar
     CLOSED: [2019-11-16 Sat 12:30]
 
-*** Poner variable global y probar un par de ints, luego deshabilitar
+*** DONE Poner variable global y probar un par de ints, luego deshabilitar
+    CLOSED: [2019-11-17 Sun 10:26]
     - deshabilitar con DisableInterrupts para poder probarlo
     - habilitar nuevamente
 
+
 ** Usart0 con y sin Int
-*** Non-Vectored Int
+*** DONE Sin Int
+    CLOSED: [2019-11-17 Sun 12:29]
+    - bytes y strings ok
+    - strings en memoria
+    - strings en memoria con variable cargada por default
+
 *** Vectored Int
 
 ** Verificacion general de Ints
-*** TODO Probar de no marcar con el atributo las funciones de interrupciones
-*** TODO Probar disable / enable interrupts a nivel de core
+*** DONE Probar de no marcar con el atributo las funciones de interrupciones
+    CLOSED: [2019-11-17 Sun 10:27]
+    deben estar marcadas con attribute IRQ
+
+*** DONE Probar disable / enable interrupts a nivel de core
+    CLOSED: [2019-11-17 Sun 10:27]
     - al final del main.c tengo codigo comentado de una propuesta para LPC2103
       que es el mismo core
 

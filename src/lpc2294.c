@@ -14,19 +14,17 @@
 #define BAUDRATEDIVISOR (PCLKFREQ/(BAUDRATE*16))
 
 // Module Externals -----------------------------------------------------------
-extern volatile unsigned short global_timer;
+// extern volatile unsigned short global_timer;
 
 // Module Globals --------------------------------------------------------------
 volatile unsigned short wait_ms_counter = 0;
 
 
 // Module Private Functions ----------------------------------------------------
-// Pointers to interrupt callback functions.
-static void (*uart0rx_function)(unsigned char);
-static void (*uart0tx_function)(void);
+static void TimerInterruptHandler (void) __attribute__ ((interrupt ("IRQ")));
+static void DefDummyInterrupt (void) __attribute__ ((interrupt ("IRQ")));
+static void UART0InterruptHandler (void) __attribute__ ((interrupt ("IRQ")));
 
-static void TimerInterruptHandler(void) __attribute__ ((interrupt ("IRQ")));
-static void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
 // void DefDummyInterrupt(void) __attribute__ ((interrupt ("IRQ")));
 
 //
@@ -51,12 +49,12 @@ static void DefDummyInterrupt(void)
 static void TimerInterruptHandler(void)
 {
     T0IR = 0xff; // Clear timer 0 interrupt line.
-    if (LED3)
-        LED3_OFF;
-    else
-        LED3_ON;
+    // if (LED3)
+    //     LED3_OFF;
+    // else
+    //     LED3_ON;
 
-    global_timer++;
+    // global_timer++;
     
     if (wait_ms_counter)
         wait_ms_counter--;
@@ -73,27 +71,28 @@ void Wait_ms (unsigned short tms)
 
 
 //UART0 interrupt handler
-static void UART0Interrupt(void)
+static void UART0InterruptHandler (void)
 {
     unsigned char status = 0;
     status = (unsigned char) (U0IIR >> 1);
     status &= 0x07;
     
-  // switch(U0IIR_bit.IID)
-  switch(status)      
-  {
-  case 0x1:  //THRE interrupt
-    (*uart0tx_function)(); //Call tx buffer empty callback function
-    break;
-  case 0x2:  //Receive data available
-    (*uart0rx_function)(U0RBR);    //Call received byte callback function
-    break;
-  case 0x0:  //Modem interrupt
-  case 0x3:  //Receive line status interrupt (RDA)
-  case 0x6:  //Character time out indicator interrupt (CTI)
-  default:
-    break;
-  }
+    // switch(U0IIR_bit.IID)
+    switch(status)      
+    {
+    case 0x1:  //THRE interrupt
+        // (*uart0tx_function)(); //Call tx buffer empty callback function
+        break;
+    case 0x2:  //Receive data available
+        // (*uart0rx_function)(U0RBR);    //Call received byte callback function
+        break;
+    case 0x0:  //Modem interrupt
+    case 0x3:  //Receive line status interrupt (RDA)
+    case 0x6:  //Character time out indicator interrupt (CTI)
+    default:
+        break;
+    }
+    VICVectAddr = 0;    // Reset VIC logic
 }
 
 // IRQ exception handler. Calls the interrupt handlers.
@@ -145,7 +144,7 @@ void LPC2294InitTimerInterruptNonVectored (void)
 
 
 // Setup Timer interrupt
-void LPC2294InitTimerInterrupt(void)
+void LPC2294InitTimerInterrupt (void)
 {
     VICIntSelect &= ~VIC_TIMER0; // IRQ on timer 0 line.
     VICVectAddr1 = (unsigned int)&TimerInterruptHandler;
@@ -154,18 +153,15 @@ void LPC2294InitTimerInterrupt(void)
     VICVectAddr = 0;    // Reset VIC logic    
 }
 
-// Setup UART interrupt
-void LPC2294InitUART0Interrupt(void(*uart0rx_func)(unsigned char),
-                               void(*uart0tx_func)())
-{
-  // Setup uart1 callback functions.
-  uart0rx_function = uart0rx_func;
-  uart0tx_function = uart0tx_func;
 
-  VICIntSelect &= ~VIC_UART0;  // IRQ on UART0.
-  VICVectAddr5 = (unsigned int)&UART0Interrupt;
-  VICVectCntl5 = VIC_VEC_UART0 | VIC_VEC_ENABLE_MASK; // Enable vector interrupt for UART0.
-  VICIntEnable |= VIC_UART0;    // Enable UART 0 interrupt.
+// Setup UART interrupt
+void LPC2294InitUART0Interrupt (void)
+{
+    VICIntSelect &= ~VIC_UART0;  // IRQ on UART0.
+    VICVectAddr5 = (unsigned int)&UART0InterruptHandler;
+    VICVectCntl5 = VIC_VEC_UART0 | VIC_VEC_ENABLE_MASK; // Enable vector interrupt for UART0.
+    VICIntEnable |= VIC_UART0;    // Enable UART 0 interrupt.
+    VICVectAddr = 0;    // Reset VIC logic    
 }
 
 //
@@ -268,16 +264,28 @@ void LPC2294InitUART0()
 
   //Enable UART0 interrupts
   // U0IER_bit.RDAIE  = 1;  //Enable byte received interrupt
-  U0IER |= 0x01;
+  // U0IER |= 0x01;
   // U0IER_bit.THREIE = 1;  //Enable tx buf empty interrupt
-  U0IER |= 0x02;
+  // U0IER |= 0x02;
 }
 
 //Transmits one byte via UART0
 void LPC2294UART0TxByte(unsigned char byte)
 {
   // while(U0LSR_bit.THRE != 1);
-    while(!(U0LSR & 0x10));
+    while(!(U0LSR & 0x20));
     U0THR = byte;
+}
+
+
+//Transmits strings via UART0
+void LPC2294UART0TxString (char * s_byte)
+{
+    while (*s_byte != '\0')
+    {
+        while(!(U0LSR & 0x20));
+        U0THR = *s_byte;
+        s_byte++;
+    }
 }
 
