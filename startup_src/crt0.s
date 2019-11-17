@@ -182,14 +182,20 @@ abort:
 @ Disable requested interrupts (IRQ, FIQ or both)        
         .global __disable_interrupts
 __disable_interrupts:
-        mrs     r1, CPSR           @ Load interrupt status
-        and     r0, a1, #I_BIT | F_BIT  @ First argument specifies which interrupttypes
-                                              @ to disable. Make sure we do nothing else than
-                                              @ that by masking out all other bits (NOTE: a1 == r0)
-        orr     r1, r1, r0              @ Now disable requested interrupts by setting the right bits
-        msr     CPSR_c, r1           @ Place modified status register back
-        bx      lr                      @ And exit function
+@        mrs     r1, CPSR           @ Load interrupt status
+@        and     r0, a1, #I_BIT | F_BIT  @ First argument specifies which interrupttypes
+@                                              @ to disable. Make sure we do nothing else than
+@                                              @ that by masking out all other bits (NOTE: a1 == r0)
+@        orr     r1, r1, r0              @ Now disable requested interrupts by setting the right bits
+@        msr     CPSR_c, r1           @ Place modified status register back
+@        bx      lr                      @ And exit function
 
+        mrs     r0, cpsr
+        orr     r0, r0, #I_BIT
+        msr     cpsr_c, r0
+        orr     r0, r0, #F_BIT
+        msr     cpsr_c, r0
+        bx      lr
 @@
 @ Enable requested interrupts (IRQ, FIQ or both)
         .global __enable_interrupts

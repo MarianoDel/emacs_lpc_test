@@ -137,8 +137,8 @@ int main (void)
             case WITH_CORE_INTS:
                 if (global_timer > 1000)
                 {
-                    // DisableInterrupts;
-                    VICIntEnClear |= VIC_TIMER0;
+                    DisableInterrupts;
+                    // VICIntEnClear |= VIC_TIMER0;
                     LED3_OFF;
                     int_state = ONLY_TIMER;
                     global_timer = 0;
@@ -164,8 +164,8 @@ int main (void)
                     LED1_OFF;
                     int_state = WITH_CORE_INTS;
                     global_timer = 0;
-                    // EnableInterrupts;
-                    VICIntEnable |= VIC_TIMER0;
+                    EnableInterrupts;
+                    // VICIntEnable |= VIC_TIMER0;
                 }
                 break;
             }
