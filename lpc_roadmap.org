@@ -44,8 +44,12 @@
     CLOSED: [2019-11-18 Mon 08:15]
     - lo hace bien!
 
-*** Verificar strings
-*** Verificar funciones de la lib standard
+*** DONE Verificar strings
+    CLOSED: [2019-11-18 Mon 08:48]
+*** DONE Verificar funciones de la lib standard
+    CLOSED: [2019-11-18 Mon 08:48]
+    - verifique con sprintf agregando syscall para newlib
+
 
 ** TODO Verificar vectored ints
 

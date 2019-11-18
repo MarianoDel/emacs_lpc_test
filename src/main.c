@@ -10,9 +10,12 @@
 #include "lpc2294.h"
 #include "lpc2294_reg.h"
 #include <stdio.h>
+#include "hard.h"
 
 // Module Externals -----------------------------------------------------------
+#ifdef HARD_TEST_MODE_IRQ_CORE_AND_VIC
 volatile unsigned short global_timer = 0;
+#endif
 
 extern void __disable_interrupts ();
 extern void __enable_interrupts ();
@@ -39,7 +42,7 @@ int main (void)
     // Set up Gpio registers.  
     LPC2294InitPIO();
 
-    // First disable interrupts.
+    // First disable interrupts (at core level)
     DisableInterrupts;
 
     // Setup interrupt controller.
@@ -50,7 +53,7 @@ int main (void)
     // Periodic timer initialization.
     LPC2294InitTimer();
 
-    // Enable interrupts.
+    // Enable interrupts at core level
     EnableInterrupts;
 
     LED1_OFF;
@@ -66,9 +69,32 @@ int main (void)
     //Start the UART0
     LPC2294InitUART0();
 
+    // Hard Test Starts from here. ---------------------------------------------
+#ifdef HARD_TEST_MODE_USART0_RX
+    //enciendo usart1
+    Usart1Config();
+    char buff_local [128] = { 0 };
+    unsigned char readed = 0;
+
+    while(1)
+    {
+        Wait_ms(3000);
+        if (usart1_have_data)
+        {
+            readed = ReadUsart1Buffer(buff_local, 127);
+            *(buff_local + readed) = '\n';    //cambio el '\0' por '\n' antes de enviar
+            *(buff_local + readed + 1) = '\0';    //ajusto el '\0'
+            Usart1Send(buff_local);
+        }
+    }    
+#endif // HARD_TEST_MODE_USART0_RX
+
+
+#ifdef HARD_TEST_MODE_USART0_TX    
     unsigned char a_enviar = 2;
     char seq [10] = { 0 };
     LPC2294UART0TxString("Empiezo con 2\n");
+    
     while (1)
     {
         Wait_ms(330);
@@ -81,7 +107,7 @@ int main (void)
         case 0:
             LPC2294UART0TxString((char *)s1);
             Wait_ms(10);
-            sprintf(seq, "->%d\n", a_enviar);
+            sprintf(seq, "-> %d\n", a_enviar);
             LPC2294UART0TxString(seq);
             a_enviar++;
             break;
@@ -89,7 +115,7 @@ int main (void)
         case 1:
             LPC2294UART0TxString((char *)s2);
             Wait_ms(10);
-            sprintf(seq, "->%d\n", a_enviar);
+            sprintf(seq, "-> %d\n", a_enviar);
             LPC2294UART0TxString(seq);
             a_enviar++;            
             break;
@@ -97,131 +123,77 @@ int main (void)
         case 2:
             LPC2294UART0TxString((char *)s3);
             Wait_ms(10);
-            sprintf(seq, "->%d\n", a_enviar);
+            sprintf(seq, "-> %d\n", a_enviar);
             LPC2294UART0TxString(seq);
             a_enviar = 0;
             break;
         }
         LED3_OFF;
+    }
+#endif    // HARD_TEST_MODE_USART0_TX
 
-        // Wait_ms(50);
-        
-        // if (T0IR & 0x01)    //hubo match
-        // {
-        //     T0IR |= 0x01;    //blank int line
-        //     if (LED1)
-        //         LED1_OFF;
-        //     else
-        //         LED1_ON;
-        // }
 
-        // if (VICRawIntr & 0x10)    //hubo match en el VIC
-        // {
-        //     if (VICIRQStatus & 0x10)
-        //     {
-        //         if (LED7)
-        //             LED7_OFF;
-        //         else
-        //             LED7_ON;
-
-        //         //para que lo que sigue funcione, necesito quitar static
-        //         //en lpc2294.c declaration & definition
-        //         if (VICVectAddr == (unsigned int) &DefDummyInterrupt)
-        //         {
-        //             if (LED6)
-        //                 LED6_OFF;
-        //             else
-        //                 LED6_ON;
-
-        //             VICVectAddr = 0;
-        //         }
-        //     }
-
-        //     if (LED1)
-        //         LED1_OFF;
-        //     else
-        //         LED1_ON;
-
-        //     T0IR |= 0x01;    //blank int line
-        // }
-        
-        // if (T0TC < (PCLKFREQ >> 1))
-        //     LED7_ON;
-        // else
-        //     LED7_OFF;
-
-        // while (1)
-        // {
-        //     //disable int
-        //     VICIntEnClear |= VIC_TIMER0;
-        //     SimpleDelay2();
-        //     VICIntEnable |= VIC_TIMER0;
-        //     SimpleDelay2();
-        // }
-            
-            
-            
-
-        //apagar y prender ints en el core cada 1 segundo
+#ifdef HARD_TEST_MODE_IRQ_CORE_AND_VIC
+    //apagar y prender ints en el core cada 1 segundo
 #define WITH_CORE_INTS    0
 #define ONLY_TIMER    1
         
-        // unsigned char int_state = WITH_CORE_INTS;
+    unsigned char int_state = WITH_CORE_INTS;
+    
+    while (1)
+    {
+        switch (int_state)
+        {
+        case WITH_CORE_INTS:
+            if (global_timer > 1000)
+            {
+                DisableInterrupts;
+                // VICIntEnClear |= VIC_TIMER0;
+                LED3_OFF;
+                int_state = ONLY_TIMER;
+                global_timer = 0;
+            }
+            break;
 
-        // while (1)
-        // {
-        //     switch (int_state)
-        //     {
-        //     case WITH_CORE_INTS:
-        //         if (global_timer > 1000)
-        //         {
-        //             DisableInterrupts;
-        //             // VICIntEnClear |= VIC_TIMER0;
-        //             LED3_OFF;
-        //             int_state = ONLY_TIMER;
-        //             global_timer = 0;
-        //         }
-        //         break;
+        case ONLY_TIMER:
+            if (global_timer < 1000)
+            {
+                if (T0IR & 0x01)    //hubo match
+                {
+                    T0IR |= 0x01;    //blank int line
+                    if (LED1)
+                        LED1_OFF;
+                    else
+                        LED1_ON;
 
-        //     case ONLY_TIMER:
-        //         if (global_timer < 1000)
-        //         {
-        //             if (T0IR & 0x01)    //hubo match
-        //             {
-        //                 T0IR |= 0x01;    //blank int line
-        //                 if (LED1)
-        //                     LED1_OFF;
-        //                 else
-        //                     LED1_ON;
-
-        //                 global_timer++;
-        //             }
-        //         }
-        //         else
-        //         {
-        //             LED1_OFF;
-        //             int_state = WITH_CORE_INTS;
-        //             global_timer = 0;
-        //             EnableInterrupts;
-        //             // VICIntEnable |= VIC_TIMER0;
-        //         }
-        //         break;
-        //     }
-        // }
-        
+                    global_timer++;
+                }
+            }
+            else
+            {
+                LED1_OFF;
+                int_state = WITH_CORE_INTS;
+                global_timer = 0;
+                EnableInterrupts;
+                // VICIntEnable |= VIC_TIMER0;
+            }
+            break;
+        }
     }
-        
+#endif    // HARD_TEST_MODE_IRQ_CORE_AND_VIC
+
+
+#ifdef HARD_TEST_MODE_LED
     // Loop forever.
     while (1)
     {
-        // LPC2294LedSet();
         LED1_ON;
         LED3_ON;
         LED4_ON;
         LED6_ON;
         LED7_ON;
         LED8_ON;
-        Sleep(1000);
+        Wait_ms(1000);
         // SimpleDelay();
         LED1_OFF;
         LED3_OFF;
@@ -229,11 +201,12 @@ int main (void)
         LED6_OFF;
         LED7_OFF;
         LED8_OFF;
-        Sleep(3000);
+        Wait_ms(3000);
         // SimpleDelay();
-        
     }
+#endif // HARD_TEST_MODE_LED
 
+    
     return 0;
 }
 

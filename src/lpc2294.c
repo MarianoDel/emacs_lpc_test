@@ -8,13 +8,15 @@
 
 #include "lpc2294.h"
 #include "lpc2294_reg.h"
-
+#include "hard.h"
 
 #define BAUDRATE    9600
 #define BAUDRATEDIVISOR (PCLKFREQ/(BAUDRATE*16))
 
 // Module Externals -----------------------------------------------------------
-// extern volatile unsigned short global_timer;
+#ifdef HARD_TEST_MODE_IRQ_CORE_AND_VIC
+extern volatile unsigned short global_timer;
+#endif
 
 // Module Globals --------------------------------------------------------------
 volatile unsigned short wait_ms_counter = 0;
@@ -49,12 +51,15 @@ static void DefDummyInterrupt(void)
 static void TimerInterruptHandler(void)
 {
     T0IR = 0xff; // Clear timer 0 interrupt line.
-    // if (LED3)
-    //     LED3_OFF;
-    // else
-    //     LED3_ON;
 
-    // global_timer++;
+#ifdef HARD_TEST_MODE_IRQ_CORE_AND_VIC
+    if (LED3)
+        LED3_OFF;
+    else
+        LED3_ON;
+
+    global_timer++;
+#endif
     
     if (wait_ms_counter)
         wait_ms_counter--;
