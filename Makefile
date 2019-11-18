@@ -34,6 +34,9 @@ ASRC = ./startup_src/crt0.s
 # ASRC += ./startup_src/config_crt0.s
 # ASRC +=
 
+## Startup Files
+SRC += ./startup_src/syscalls.c
+
 # Optimization
  # Optimization-setting of the compiler. Chose -O0 when testing, -O1 or -O2
  # when everything seems to work OK. Other possible settings are -Os (when

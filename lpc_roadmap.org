@@ -40,9 +40,12 @@
 
 
 ** Para jugar un rato
-*** Verificar que se carguen variables con valores definidos
+*** DONE Verificar que se carguen variables con valores definidos
+    CLOSED: [2019-11-18 Mon 08:15]
+    - lo hace bien!
+
 *** Verificar strings
-*** Verificar funciones de la lib standar
+*** Verificar funciones de la lib standard
 
 ** TODO Verificar vectored ints
 

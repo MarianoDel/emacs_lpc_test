@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "lpc2294.h"
 #include "lpc2294_reg.h"
+#include <stdio.h>
 
 // Module Externals -----------------------------------------------------------
 volatile unsigned short global_timer = 0;
@@ -66,6 +67,7 @@ int main (void)
     LPC2294InitUART0();
 
     unsigned char a_enviar = 2;
+    char seq [10] = { 0 };
     LPC2294UART0TxString("Empiezo con 2\n");
     while (1)
     {
@@ -78,16 +80,25 @@ int main (void)
         {
         case 0:
             LPC2294UART0TxString((char *)s1);
+            Wait_ms(10);
+            sprintf(seq, "->%d\n", a_enviar);
+            LPC2294UART0TxString(seq);
             a_enviar++;
             break;
 
         case 1:
             LPC2294UART0TxString((char *)s2);
+            Wait_ms(10);
+            sprintf(seq, "->%d\n", a_enviar);
+            LPC2294UART0TxString(seq);
             a_enviar++;            
             break;
 
         case 2:
             LPC2294UART0TxString((char *)s3);
+            Wait_ms(10);
+            sprintf(seq, "->%d\n", a_enviar);
+            LPC2294UART0TxString(seq);
             a_enviar = 0;
             break;
         }
