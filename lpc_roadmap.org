@@ -51,7 +51,8 @@
     - verifique con sprintf agregando syscall para newlib
 
 
-** TODO Verificar vectored ints
+** DONE Verificar vectored ints
+   CLOSED: [2019-11-19 Tue 11:27]
 
 ** TODO Limpiar archivos que no uso del proyecto
 
@@ -70,3 +71,5 @@
 ** Flasher command line
    lpc21isp -bin blinky.bin /dev/ttyACM0 9600 10000
 
+** Si tiene proteccion, debo hacer un wipe antes de grabar
+   lpc21isp -wipe -bin blinky.bin /dev/ttyACM0 9600 10000

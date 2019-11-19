@@ -35,7 +35,16 @@ void DisableInterrupts (void);
 const char s1 [] = {"Primero\n"};
 const char s2 [] = {"Segundo\n"};
 const char s3 [] = {"Tercero\n"};
-    
+
+/* By writing a special value to a special location (...) all ISP code
+   reading functions AND the complete JTAG interface are disabled. */
+// #define CODEPROTECTION_CRP2
+#if defined CODEPROTECTION_CRP1
+const unsigned int codeprotection __attribute__ ((section(".codeprotection"))) = 0x12345678;
+#elif defined CODEPROTECTION_CRP2
+const unsigned int codeprotection __attribute__ ((section(".codeprotection"))) = 0x87654321;
+#endif
+
 // Module Functions Definitions ------------------------------------------------
 int main (void)
 {

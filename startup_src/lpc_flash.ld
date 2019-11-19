@@ -37,18 +37,20 @@ SECTIONS
     . = 0;
 
     /* Startup section */
-    /* startup : */
-    /* { */
-    /*     KEEP(*(.startup))   /\* When REMOVEUNUSED is enabled (see the Makefile), this */
-    /*                            ensures the startup section (and thus everything else) isn't removed *\/ */
-    /* } > rom */
+    startup :
+    {
+       *crt0.o (.text)            /* Startup code */
 
-/* #if CODEPROTECTION && defined __RUN_FROM_ROM */
-/*     codeprotection 0x1fc : */
-/*     { */
-/*         KEEP(*(.codeprotection)) */
-/*     } > rom */
-/* #endif */
+    } > ROM
+
+    . = ALIGN(4);   /* Make sure the code is alligned right. The argument tells
+                       the linker to align to the next Nth byte (4th in this case) boundary) */
+
+    /* Next, the code protection*/
+    codeprotection 0x1fc :
+    {
+        KEEP(*(.codeprotection))
+    } > ROM
 
     . = ALIGN(4);   /* Make sure the code is alligned right. The argument tells
                        the linker to align to the next Nth byte (4th in this case) boundary) */
@@ -58,7 +60,8 @@ SECTIONS
   /* first section is .text which is used for code */
   .text :
   {
-    *crt0.o (.text)            /* Startup code */
+    /* *crt0.o (.text)            /\* Startup code *\/ */
+
     *(.text*)           /* code */
 
     . = ALIGN(4);
