@@ -58,5 +58,6 @@ void LPC2294LedClear(void);
 void LPC2294InitUART0(void);
 void LPC2294UART0TxByte(unsigned char byte);
 void LPC2294UART0TxString (char *);
+void Usart0_Reset (void);
 
 #endif  /* __LPC2294_H__ */

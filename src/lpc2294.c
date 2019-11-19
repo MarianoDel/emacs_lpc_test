@@ -18,8 +18,14 @@
 extern volatile unsigned short global_timer;
 #endif
 
+extern volatile unsigned char usart0_have_data;
+extern volatile unsigned char * prx0;
+
 // Module Globals --------------------------------------------------------------
 volatile unsigned short wait_ms_counter = 0;
+
+#define SIZEOF_DATA    80
+volatile unsigned char rx0buff[SIZEOF_DATA];
 
 
 // Module Private Functions ----------------------------------------------------
@@ -79,6 +85,7 @@ void Wait_ms (unsigned short tms)
 static void UART0InterruptHandler (void)
 {
     unsigned char status = 0;
+    unsigned char dummy = 0;
     status = (unsigned char) (U0IIR >> 1);
     status &= 0x07;
     
@@ -89,7 +96,24 @@ static void UART0InterruptHandler (void)
         // (*uart0tx_function)(); //Call tx buffer empty callback function
         break;
     case 0x2:  //Receive data available
-        // (*uart0rx_function)(U0RBR);    //Call received byte callback function
+        dummy = U0RBR;
+        
+        if (prx0 < &rx0buff[SIZEOF_DATA])
+        {
+            if ((dummy == '\n') || (dummy == '\r') || (dummy == 26))		//26 es CTRL-Z
+            {
+                *prx0 = '\0';
+                usart0_have_data = 1;
+            }
+            else
+            {
+                *prx0 = dummy;
+                prx0++;
+            }
+        }
+        else
+            prx0 = rx0buff;    //soluciona problema bloqueo con garbage
+
         break;
     case 0x0:  //Modem interrupt
     case 0x3:  //Receive line status interrupt (RDA)
@@ -98,6 +122,13 @@ static void UART0InterruptHandler (void)
         break;
     }
     VICVectAddr = 0;    // Reset VIC logic
+}
+
+
+void Usart0_Reset (void)
+{
+    usart0_have_data = 0;
+    prx0 = rx0buff;
 }
 
 // IRQ exception handler. Calls the interrupt handlers.
@@ -176,15 +207,15 @@ void LPC2294InitUART0Interrupt (void)
 // Setup Timer
 void LPC2294InitTimer()
 {
-  T0TCR = 0; // Disable timer 0.
-  T0TCR = 2; // Reset timer 0.
-  T0TCR = 0;
-  T0IR = 0xff; // Clear timer 0 interrupt line.
-  T0PR = 0; // Prescaler is set to no division.
-  T0MR0 = PCLKFREQ / 1000; // Count up to this value. To generate 1000KHz.
-  T0MCR = 3; // Reset and interrupt on MR0 (match register 0).
-  T0CCR = 0; // Capture is disabled.
-  T0EMR = 0; // No external match output.
+    T0TCR = 0; // Disable timer 0.
+    T0TCR = 2; // Reset timer 0.
+    T0TCR = 0;
+    T0IR = 0xff; // Clear timer 0 interrupt line.
+    T0PR = 0; // Prescaler is set to no division.
+    T0MR0 = PCLKFREQ / 1000; // Count up to this value. To generate 1000KHz.
+    T0MCR = 3; // Reset and interrupt on MR0 (match register 0).
+    T0CCR = 0; // Capture is disabled.
+    T0EMR = 0; // No external match output.
 }
 
 // Start Timer
@@ -219,59 +250,36 @@ void LPC2294InitPIO()
 }
 
 //
-// LED output drivers.
-//
-
-void LPC2294LedClear(void)
-{
-    IO0CLR |= 0x01C00000;
-    IO1CLR |= 0x000D0000; 
-}
-
-void LPC2294LedSet(void)
-{
-    IO0SET |= 0x01C00000;
-    IO1SET |= 0x000D0000; 
-}
-
-//
 // UART functions
 //
 
 void LPC2294InitUART0()
 {
-  //Set pins for use with UART
-  // PINSEL0_bit.P0_0 = 0x01;                  /* Enable RxD0 and TxD0              */
-  // PINSEL0_bit.P0_1 = 0x01;                  /* Enable RxD0 and TxD0              */
+    //Set pins for use with UART
+    PINSEL0 |= 0x01;    //UART0 TXD
+    PINSEL0 |= 0x04;    //UART0 RXD
 
-  PINSEL0 |= 0x01;    //UART0 TXD
-  PINSEL0 |= 0x04;    //UART0 RXD
+    //Set the FIFO enable bit in the FCR register. This bit must be set for
+    //proper UART operation.
+    U0FCR = 1;
 
-  //Set the FIFO enable bit in the FCR register. This bit must be set for
-  //proper UART operation.
-  U0FCR = 1;
+    //Set baudrate
+    U0LCR |= 0x80;
+    U0DLL = BAUDRATEDIVISOR & 0x00ff;
+    U0DLM = (BAUDRATEDIVISOR >> 8) & 0x00ff;
+    U0LCR &= 0x7F;
 
-  //Set baudrate
-  // U0LCR_bit.DLAB = 1;
-  U0LCR |= 0x80;
-  U0DLL = BAUDRATEDIVISOR & 0x00ff;
-  U0DLM = (BAUDRATEDIVISOR >> 8) & 0x00ff;
-  // U0LCR_bit.DLAB = 0;
-  U0LCR &= 0x7F;
+    //Set mode
+    U0LCR |= 0x03;       //8 bit word length
+    U0LCR &= 0xFB;     //1 stop bit
+    U0LCR &= 0xCF;     //No parity
 
-  //Set mode
-  // U0LCR_bit.WLS = 0x3;   //8 bit word length
-  U0LCR |= 0x03;
-  // U0LCR_bit.SBS = 0x0;   //1 stop bit
-  U0LCR &= 0xFB;
-  // U0LCR_bit.PE  = 0x0;   //No parity
-  U0LCR &= 0xCF;
+    prx0 = rx0buff;
+    
+    //Enable UART0 interrupts
+    U0IER |= 0x01;    //Enable byte received interrupt
+    // U0IER |= 0x02;    //Enable tx buf empty interrupt
 
-  //Enable UART0 interrupts
-  // U0IER_bit.RDAIE  = 1;  //Enable byte received interrupt
-  // U0IER |= 0x01;
-  // U0IER_bit.THREIE = 1;  //Enable tx buf empty interrupt
-  // U0IER |= 0x02;
 }
 
 //Transmits one byte via UART0
@@ -293,4 +301,6 @@ void LPC2294UART0TxString (char * s_byte)
         s_byte++;
     }
 }
+
+
 

@@ -17,6 +17,9 @@
 volatile unsigned short global_timer = 0;
 #endif
 
+volatile unsigned char usart0_have_data = 0;
+volatile unsigned char * prx0;
+
 extern void __disable_interrupts ();
 extern void __enable_interrupts ();
 extern void DefDummyInterrupt ();
@@ -46,9 +49,10 @@ int main (void)
     DisableInterrupts;
 
     // Setup interrupt controller.
-    LPC2294InitVIC();
-    LPC2294InitTimerInterrupt();
+    LPC2294InitVIC ();
+    LPC2294InitTimerInterrupt ();
     // LPC2294InitTimerInterruptNonVectored();
+    LPC2294InitUART0Interrupt ();
 
     // Periodic timer initialization.
     LPC2294InitTimer();
@@ -71,20 +75,15 @@ int main (void)
 
     // Hard Test Starts from here. ---------------------------------------------
 #ifdef HARD_TEST_MODE_USART0_RX
-    //enciendo usart1
-    Usart1Config();
-    char buff_local [128] = { 0 };
-    unsigned char readed = 0;
-
+    LPC2294UART0TxString("Uart0 Rx Test\n");
+    
     while(1)
     {
-        Wait_ms(3000);
-        if (usart1_have_data)
+        if (usart0_have_data)
         {
-            readed = ReadUsart1Buffer(buff_local, 127);
-            *(buff_local + readed) = '\n';    //cambio el '\0' por '\n' antes de enviar
-            *(buff_local + readed + 1) = '\0';    //ajusto el '\0'
-            Usart1Send(buff_local);
+            Usart0_Reset();
+            LPC2294UART0TxString("receiv: ");
+            LPC2294UART0TxString((char *) prx0);
         }
     }    
 #endif // HARD_TEST_MODE_USART0_RX
@@ -93,6 +92,7 @@ int main (void)
 #ifdef HARD_TEST_MODE_USART0_TX    
     unsigned char a_enviar = 2;
     char seq [10] = { 0 };
+    LPC2294UART0TxString("Uart0 Tx Test\n");
     LPC2294UART0TxString("Empiezo con 2\n");
     
     while (1)
@@ -147,8 +147,8 @@ int main (void)
         case WITH_CORE_INTS:
             if (global_timer > 1000)
             {
-                DisableInterrupts;
-                // VICIntEnClear |= VIC_TIMER0;
+                DisableInterrupts;    //at core level
+                // VICIntEnClear |= VIC_TIMER0;    //at VIC level
                 LED3_OFF;
                 int_state = ONLY_TIMER;
                 global_timer = 0;
@@ -174,8 +174,8 @@ int main (void)
                 LED1_OFF;
                 int_state = WITH_CORE_INTS;
                 global_timer = 0;
-                EnableInterrupts;
-                // VICIntEnable |= VIC_TIMER0;
+                EnableInterrupts;    //at core level
+                // VICIntEnable |= VIC_TIMER0;    //at VIC level
             }
             break;
         }
