@@ -38,7 +38,9 @@ const char s3 [] = {"Tercero\n"};
 
 /* By writing a special value to a special location (...) all ISP code
    reading functions AND the complete JTAG interface are disabled. */
-// #define CODEPROTECTION_CRP2
+// #define CODEPROTECTION_CRP1
+#define CODEPROTECTION_CRP2
+
 #if defined CODEPROTECTION_CRP1
 const unsigned int codeprotection __attribute__ ((section(".codeprotection"))) = 0x12345678;
 #elif defined CODEPROTECTION_CRP2

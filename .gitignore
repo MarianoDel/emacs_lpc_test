@@ -4,6 +4,8 @@
 *.elf
 *.map
 *.bin
+*.hex
+*.xxd
 .tags
 GPATH
 GRTAGS
